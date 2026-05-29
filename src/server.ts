@@ -23,7 +23,12 @@ app.get('/health', (_, res) => {
   res.json({ ok: true, name: 'AI Compiler Demo' });
 });
 
-app.listen(port, () => {
-  // eslint-disable-next-line no-console
-  console.log(`AI compiler demo available at http://localhost:${port}`);
-});
+// Only listen if this file is run directly (not when imported by Vercel)
+if (process.env.VERCEL !== '1') {
+  app.listen(port, () => {
+    // eslint-disable-next-line no-console
+    console.log(`AI compiler demo available at http://localhost:${port}`);
+  });
+}
+
+export default app;
