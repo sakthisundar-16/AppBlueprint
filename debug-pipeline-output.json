@@ -1,0 +1,1008 @@
+{
+  "config": {
+    "metadata": {
+      "name": "CRM Application",
+      "domain": "crm",
+      "generatedAt": "2026-05-29T09:18:29.754Z",
+      "version": "1.0.0"
+    },
+    "intent": {
+      "appName": "CRM Application",
+      "domain": "crm",
+      "features": {
+        "login": true,
+        "signup": true,
+        "contacts": true,
+        "dashboard": true,
+        "analytics": true,
+        "payments": true,
+        "premiumPlan": true,
+        "roleBasedAccess": true,
+        "adminInterface": false
+      },
+      "entities": [
+        "User",
+        "Contact",
+        "Plan",
+        "Payment",
+        "AnalyticsEvent"
+      ],
+      "roles": [
+        "user",
+        "admin",
+        "premium"
+      ],
+      "assumptions": [
+        "Signup will be available by default alongside login to support account creation."
+      ],
+      "conflictWarnings": [],
+      "missingClarifications": []
+    },
+    "design": {
+      "pages": [
+        {
+          "id": "login",
+          "title": "Login",
+          "path": "/login",
+          "sections": [
+            {
+              "id": "login-form",
+              "type": "form",
+              "title": "Sign in",
+              "sourceApi": "/api/auth/login",
+              "entity": "User",
+              "fields": [
+                "email",
+                "password"
+              ],
+              "actions": [
+                "submit"
+              ]
+            }
+          ],
+          "auth": {
+            "allowRoles": [
+              "user",
+              "premium",
+              "admin"
+            ]
+          }
+        },
+        {
+          "id": "contacts",
+          "title": "Contacts",
+          "path": "/contacts",
+          "auth": {
+            "allowRoles": [
+              "user",
+              "premium",
+              "admin"
+            ]
+          },
+          "sections": [
+            {
+              "id": "contacts-table",
+              "type": "table",
+              "title": "Contacts",
+              "sourceApi": "/api/contacts",
+              "entity": "Contact",
+              "fields": [
+                "name",
+                "company",
+                "email",
+                "phone"
+              ],
+              "actions": [
+                "create",
+                "edit",
+                "delete"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "dashboard",
+          "title": "Dashboard",
+          "path": "/dashboard",
+          "auth": {
+            "allowRoles": [
+              "user",
+              "premium",
+              "admin"
+            ]
+          },
+          "sections": [
+            {
+              "id": "metrics-card",
+              "type": "card",
+              "title": "Overview",
+              "sourceApi": "/api/dashboard/summary",
+              "entity": "User",
+              "fields": [
+                "contactsCount",
+                "activePlan"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "plans",
+          "title": "Plans",
+          "path": "/plans",
+          "auth": {
+            "allowRoles": [
+              "user",
+              "premium",
+              "admin"
+            ]
+          },
+          "sections": [
+            {
+              "id": "plan-list",
+              "type": "table",
+              "title": "Plans",
+              "sourceApi": "/api/plans",
+              "entity": "Plan",
+              "fields": [
+                "name",
+                "price",
+                "features"
+              ],
+              "actions": [
+                "select"
+              ]
+            },
+            {
+              "id": "checkout-form",
+              "type": "form",
+              "title": "Subscribe",
+              "sourceApi": "/api/payments/subscribe",
+              "entity": "Payment",
+              "fields": [
+                "planId",
+                "paymentMethod"
+              ],
+              "actions": [
+                "submit"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "analytics",
+          "title": "Analytics",
+          "path": "/analytics",
+          "auth": {
+            "allowRoles": [
+              "admin"
+            ]
+          },
+          "sections": [
+            {
+              "id": "analytics-chart",
+              "type": "chart",
+              "title": "Usage Analytics",
+              "sourceApi": "/api/analytics",
+              "entity": "AnalyticsEvent",
+              "fields": [
+                "eventType",
+                "eventCount"
+              ]
+            }
+          ]
+        }
+      ],
+      "apiRoutes": [
+        {
+          "id": "auth-login",
+          "path": "/api/auth/login",
+          "method": "POST",
+          "description": "Authenticate a user and return a valid session token.",
+          "entity": "User",
+          "requestSchema": {
+            "email": {
+              "type": "string",
+              "required": true
+            },
+            "password": {
+              "type": "string",
+              "required": true
+            }
+          },
+          "responseSchema": {
+            "token": {
+              "type": "string",
+              "required": true
+            },
+            "userId": {
+              "type": "string",
+              "required": true
+            }
+          },
+          "auth": {
+            "allowRoles": [
+              "guest",
+              "user",
+              "premium",
+              "admin"
+            ]
+          }
+        },
+        {
+          "id": "auth-signup",
+          "path": "/api/auth/signup",
+          "method": "POST",
+          "description": "Create a new user account.",
+          "entity": "User",
+          "requestSchema": {
+            "name": {
+              "type": "string",
+              "required": true
+            },
+            "email": {
+              "type": "string",
+              "required": true
+            },
+            "password": {
+              "type": "string",
+              "required": true
+            }
+          },
+          "responseSchema": {
+            "userId": {
+              "type": "string",
+              "required": true
+            }
+          },
+          "auth": {
+            "allowRoles": [
+              "guest",
+              "user",
+              "premium",
+              "admin"
+            ]
+          }
+        },
+        {
+          "id": "contacts-list",
+          "path": "/api/contacts",
+          "method": "GET",
+          "description": "List contacts for the current user.",
+          "entity": "Contact",
+          "requestSchema": {},
+          "responseSchema": {
+            "id": {
+              "type": "string",
+              "required": true
+            },
+            "name": {
+              "type": "string",
+              "required": true
+            },
+            "company": {
+              "type": "string",
+              "required": false
+            },
+            "email": {
+              "type": "string",
+              "required": true
+            },
+            "phone": {
+              "type": "string",
+              "required": false
+            }
+          },
+          "auth": {
+            "allowRoles": [
+              "user",
+              "premium",
+              "admin"
+            ]
+          }
+        },
+        {
+          "id": "contacts-create",
+          "path": "/api/contacts-81h",
+          "method": "POST",
+          "description": "Create a new contact.",
+          "entity": "Contact",
+          "requestSchema": {
+            "name": {
+              "type": "string",
+              "required": true
+            },
+            "email": {
+              "type": "string",
+              "required": true
+            },
+            "company": {
+              "type": "string",
+              "required": false
+            },
+            "phone": {
+              "type": "string",
+              "required": false
+            }
+          },
+          "responseSchema": {
+            "id": {
+              "type": "string",
+              "required": true
+            }
+          },
+          "auth": {
+            "allowRoles": [
+              "user",
+              "premium",
+              "admin"
+            ]
+          }
+        },
+        {
+          "id": "dashboard-summary",
+          "path": "/api/dashboard/summary",
+          "method": "GET",
+          "description": "Provide overview metrics for the signed-in user.",
+          "entity": "User",
+          "requestSchema": {},
+          "responseSchema": {
+            "contactsCount": {
+              "type": "number",
+              "required": true
+            },
+            "activePlan": {
+              "type": "string",
+              "required": false
+            },
+            "availableActions": {
+              "type": "json",
+              "required": false
+            }
+          },
+          "auth": {
+            "allowRoles": [
+              "user",
+              "premium",
+              "admin"
+            ]
+          }
+        },
+        {
+          "id": "plans-list",
+          "path": "/api/plans",
+          "method": "GET",
+          "description": "List available pricing plans.",
+          "entity": "Plan",
+          "requestSchema": {},
+          "responseSchema": {
+            "id": {
+              "type": "string",
+              "required": true
+            },
+            "name": {
+              "type": "string",
+              "required": true
+            },
+            "price": {
+              "type": "number",
+              "required": true
+            },
+            "features": {
+              "type": "text",
+              "required": false
+            }
+          },
+          "auth": {
+            "allowRoles": [
+              "user",
+              "premium",
+              "admin"
+            ]
+          }
+        },
+        {
+          "id": "payments-subscribe",
+          "path": "/api/payments/subscribe",
+          "method": "POST",
+          "description": "Subscribe a user to a selected plan.",
+          "entity": "Payment",
+          "requestSchema": {
+            "userId": {
+              "type": "string",
+              "required": true
+            },
+            "planId": {
+              "type": "string",
+              "required": true
+            },
+            "paymentMethod": {
+              "type": "string",
+              "required": true
+            }
+          },
+          "responseSchema": {
+            "paymentId": {
+              "type": "string",
+              "required": true
+            },
+            "status": {
+              "type": "string",
+              "required": true
+            }
+          },
+          "auth": {
+            "allowRoles": [
+              "user",
+              "premium",
+              "admin"
+            ]
+          }
+        },
+        {
+          "id": "analytics-list",
+          "path": "/api/analytics",
+          "method": "GET",
+          "description": "Return analytics events and aggregated metrics.",
+          "entity": "AnalyticsEvent",
+          "requestSchema": {},
+          "responseSchema": {
+            "eventType": {
+              "type": "string",
+              "required": true
+            },
+            "eventCount": {
+              "type": "number",
+              "required": true
+            },
+            "updatedAt": {
+              "type": "date",
+              "required": true
+            }
+          },
+          "auth": {
+            "allowRoles": [
+              "admin"
+            ]
+          }
+        }
+      ],
+      "entities": [
+        {
+          "name": "User",
+          "fields": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "email",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "password",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "role",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "planId",
+              "type": "string",
+              "required": false
+            }
+          ],
+          "relations": [
+            {
+              "type": "one-to-many",
+              "target": "Contact",
+              "field": "userId"
+            }
+          ]
+        },
+        {
+          "name": "Contact",
+          "fields": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "userId",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "company",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "email",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "phone",
+              "type": "string",
+              "required": false
+            }
+          ],
+          "relations": [
+            {
+              "type": "many-to-one",
+              "target": "User",
+              "field": "userId"
+            }
+          ]
+        },
+        {
+          "name": "Plan",
+          "fields": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "price",
+              "type": "number",
+              "required": true
+            },
+            {
+              "name": "features",
+              "type": "text",
+              "required": false
+            }
+          ]
+        },
+        {
+          "name": "Payment",
+          "fields": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "userId",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "planId",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "status",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "paymentMethod",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "createdAt",
+              "type": "date",
+              "required": true
+            }
+          ],
+          "relations": [
+            {
+              "type": "many-to-one",
+              "target": "User",
+              "field": "userId"
+            }
+          ]
+        },
+        {
+          "name": "AnalyticsEvent",
+          "fields": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "eventType",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "eventCount",
+              "type": "number",
+              "required": true
+            },
+            {
+              "name": "updatedAt",
+              "type": "date",
+              "required": true
+            }
+          ]
+        }
+      ],
+      "dbSchema": [
+        {
+          "name": "User",
+          "fields": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "email",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "password",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "role",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "planId",
+              "type": "string",
+              "required": false
+            }
+          ],
+          "relations": [
+            {
+              "type": "one-to-many",
+              "target": "Contact",
+              "field": "userId"
+            }
+          ]
+        },
+        {
+          "name": "Contact",
+          "fields": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "userId",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "company",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "email",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "phone",
+              "type": "string",
+              "required": false
+            }
+          ],
+          "relations": [
+            {
+              "type": "many-to-one",
+              "target": "User",
+              "field": "userId"
+            }
+          ]
+        },
+        {
+          "name": "Plan",
+          "fields": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "price",
+              "type": "number",
+              "required": true
+            },
+            {
+              "name": "features",
+              "type": "text",
+              "required": false
+            }
+          ]
+        },
+        {
+          "name": "Payment",
+          "fields": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "userId",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "planId",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "status",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "paymentMethod",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "createdAt",
+              "type": "date",
+              "required": true
+            }
+          ],
+          "relations": [
+            {
+              "type": "many-to-one",
+              "target": "User",
+              "field": "userId"
+            }
+          ]
+        },
+        {
+          "name": "AnalyticsEvent",
+          "fields": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "eventType",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "eventCount",
+              "type": "number",
+              "required": true
+            },
+            {
+              "name": "updatedAt",
+              "type": "date",
+              "required": true
+            }
+          ]
+        }
+      ],
+      "authRules": [
+        {
+          "role": "admin",
+          "permissions": [
+            {
+              "entity": "User",
+              "actions": [
+                "read",
+                "create",
+                "update",
+                "delete",
+                "manage"
+              ]
+            },
+            {
+              "entity": "Contact",
+              "actions": [
+                "read",
+                "create",
+                "update",
+                "delete",
+                "manage"
+              ]
+            },
+            {
+              "entity": "Plan",
+              "actions": [
+                "read",
+                "create",
+                "update",
+                "delete",
+                "manage"
+              ]
+            },
+            {
+              "entity": "Payment",
+              "actions": [
+                "read",
+                "create",
+                "update",
+                "delete",
+                "manage"
+              ]
+            },
+            {
+              "entity": "AnalyticsEvent",
+              "actions": [
+                "read",
+                "create",
+                "update",
+                "delete",
+                "manage"
+              ]
+            }
+          ]
+        },
+        {
+          "role": "premium",
+          "permissions": [
+            {
+              "entity": "User",
+              "actions": [
+                "read",
+                "create",
+                "update",
+                "delete"
+              ]
+            },
+            {
+              "entity": "Contact",
+              "actions": [
+                "read",
+                "create",
+                "update",
+                "delete"
+              ]
+            },
+            {
+              "entity": "Plan",
+              "actions": [
+                "read",
+                "create",
+                "update",
+                "delete"
+              ]
+            },
+            {
+              "entity": "Payment",
+              "actions": [
+                "read",
+                "create",
+                "update",
+                "delete"
+              ]
+            },
+            {
+              "entity": "AnalyticsEvent",
+              "actions": [
+                "read",
+                "create",
+                "update",
+                "delete"
+              ]
+            }
+          ]
+        },
+        {
+          "role": "user",
+          "permissions": [
+            {
+              "entity": "User",
+              "actions": [
+                "read",
+                "create",
+                "update"
+              ]
+            },
+            {
+              "entity": "Contact",
+              "actions": [
+                "read",
+                "create",
+                "update"
+              ]
+            },
+            {
+              "entity": "Plan",
+              "actions": [
+                "read",
+                "create",
+                "update"
+              ]
+            },
+            {
+              "entity": "Payment",
+              "actions": [
+                "read",
+                "create",
+                "update"
+              ]
+            }
+          ]
+        }
+      ],
+      "businessRules": [
+        {
+          "id": "admin-view-analytics",
+          "description": "Only admins may view analytics dashboards.",
+          "subject": "AnalyticsPage",
+          "condition": "user.role === admin",
+          "effect": "grant access"
+        },
+        {
+          "id": "premium-gating",
+          "description": "Premium content should only be available to premium subscribers.",
+          "subject": "PlanAccess",
+          "condition": "user.planId !== ''",
+          "effect": "grant premium access"
+        }
+      ]
+    },
+    "runtime": {
+      "entrypoint": "src/server.ts"
+    },
+    "warnings": [],
+    "clarifications": []
+  },
+  "valid": false,
+  "warnings": [
+    "API response field dashboard-summary.contactsCount is not defined on entity User.",
+    "API response field dashboard-summary.activePlan is not defined on entity User.",
+    "Page login does not define auth rules, but login is required by the app.",
+    "Signup will be available by default alongside login to support account creation.",
+    "API response field dashboard-summary.contactsCount is not defined on entity User.",
+    "API response field dashboard-summary.activePlan is not defined on entity User."
+  ],
+  "clarifications": [],
+  "errors": [
+    "API route auth-login uses unknown auth role guest.",
+    "API route auth-signup uses unknown auth role guest."
+  ],
+  "repairs": 2,
+  "latencyMs": 7
+}

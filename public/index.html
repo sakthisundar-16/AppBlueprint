@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Compiler Demo</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f6f8fa; color: #111; }
+    .page { max-width: 960px; margin: 0 auto; padding: 32px; }
+    textarea { width: 100%; min-height: 140px; font-size: 16px; padding: 12px; border: 1px solid #ccc; border-radius: 8px; }
+    button { padding: 12px 24px; font-size: 16px; margin-top: 12px; border: none; border-radius: 8px; background: #2f80ed; color: white; cursor: pointer; }
+    pre { background: #1e1e1e; color: #e1e1e1; padding: 16px; border-radius: 8px; overflow-x: auto; }
+    .meta { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; }
+    .details { margin-top: 12px; font-size: 14px; line-height: 1.5; }
+    .details strong { display: block; margin-bottom: 6px; }
+    .badge { padding: 8px 12px; background: #e0e7ff; border-radius: 999px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>AI Compiler Demo</h1>
+    <p>Enter a product prompt and generate a strict app config with runtime-aware output.</p>
+    <textarea id="prompt" placeholder="Build a CRM with login, contacts, dashboard, role-based access, and premium plan with payments. Admins can see analytics."></textarea>
+    <button id="generate">Generate Config</button>
+    <div class="meta" id="meta"></div>
+    <div class="details" id="details"></div>
+    <pre id="output">Ready.</pre>
+  </div>
+  <script>
+    const promptEl = document.getElementById('prompt');
+    const outputEl = document.getElementById('output');
+    const metaEl = document.getElementById('meta');
+    const detailsEl = document.getElementById('details');
+    const button = document.getElementById('generate');
+
+    button.addEventListener('click', async () => {
+      const prompt = promptEl.value.trim();
+      if (!prompt) return;
+      outputEl.textContent = 'Generating...';
+      metaEl.innerHTML = '';
+      detailsEl.innerHTML = '';
+      try {
+        const response = await fetch('/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt }),
+        });
+        const payload = await response.json();
+        if (!response.ok) {
+          outputEl.textContent = JSON.stringify(payload, null, 2);
+          return;
+        }
+
+        const badges = [];
+        badges.push(payload.valid ? 'Valid' : 'Invalid');
+        badges.push(`Repairs: ${payload.repairs}`);
+        badges.push(`Clarifications: ${payload.clarifications.length}`);
+        badges.push(`Warnings: ${payload.warnings.length}`);
+        badges.push(`Errors: ${payload.errors.length}`);
+        metaEl.innerHTML = badges.map((badge) => `<span class="badge">${badge}</span>`).join('');
+
+        const details = [];
+        if (payload.clarifications.length) {
+          details.push(`<strong>Clarifications:</strong><br>${payload.clarifications.map((item) => `<div>${item}</div>`).join('')}`);
+        }
+        if (payload.errors.length) {
+          details.push(`<strong>Errors:</strong><br>${payload.errors.map((item) => `<div>${item}</div>`).join('')}`);
+        }
+        if (payload.warnings.length) {
+          details.push(`<strong>Warnings:</strong><br>${payload.warnings.map((item) => `<div>${item}</div>`).join('')}`);
+        }
+        detailsEl.innerHTML = details.join('<hr>');
+        outputEl.textContent = JSON.stringify(payload.config || payload, null, 2);
+      } catch (error) {
+        outputEl.textContent = String(error);
+      }
+    });
+  </script>
+</body>
+</html>
